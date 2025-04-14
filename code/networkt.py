@@ -32,7 +32,7 @@ def random_pick_one(p):
 
 
 @njit
-def random_pick_many(size, p):  
+def random_pick_many(size, p):
     picklist = []
     prob = p.copy()
     for i in range(size):

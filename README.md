@@ -10,7 +10,25 @@ The code applies to the simulations in **Fig 2** and **Fig 5** of the main text.
 ### Monte Carlo Simulations
 - `main.py`: Main script to run simulations for static and temporal networks.  
 - `config.py`: Configuration parameters (network size, evolution rounds, payoff matrices, etc.).  
-- `Create_snapshot.py`: Generates structural-temporal network snapshots (e.g., random, single-star, multi-cluster).  
+- `Create_snapshot.py`: Generates structural-temporal network snapshots (e.g., random, single-star, multi-cluster). Output files follow the format:
+
+  ```bash
+  [GraphType]_[N]N_[Params]_[f]f_[SubNet].npy
+  ```
+
+  Example: `SF_400N_4m_0.3f_Single-star.npy` represents:
+
+  - `SF`: Barabási-Albert scale-free network.
+  - `400N`: 400 nodes.
+  - `4m`: Average degree 8.
+  - `0.3f`: 30% of edges activated per snapshot.
+  - `Single-star`: Structural type.
+
+  Each `.npy` file contains a **3D numpy array** of shape `(snapshotNum, N, N)`, where:
+
+  - `snapshotNum`: Number of snapshots (default 200).
+  - `N`: Number of nodes (configured in `config.py`).
+  - Each `N x N` matrix is a binary adjacency matrix for a snapshot.
 - `EvolutionGame.py`: Implements evolutionary game dynamics and strategy updates.  
 - `networkt.py`: Network generation utilities (e.g., static model scale-free networks).  
 - `QueueAndStack.py`: Data structures for BFS/DFS traversal during snapshot creation.  
