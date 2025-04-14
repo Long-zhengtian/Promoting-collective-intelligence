@@ -20,7 +20,7 @@ The code applies to the simulations in **Fig 2** and **Fig 5** of the main text.
 
   - `SF`: Barabási-Albert scale-free network.
   - `400N`: 400 nodes.
-  - `4m`: Average degree 8.
+  - `4m`: Initial attachment parameter `m=4` (for scale-free networks).
   - `0.3f`: 30% of edges activated per snapshot.
   - `Single-star`: Structural type.
 
@@ -34,7 +34,7 @@ The code applies to the simulations in **Fig 2** and **Fig 5** of the main text.
 - `QueueAndStack.py`: Data structures for BFS/DFS traversal during snapshot creation.  
 - `players.py` : Defines player classes and strategy initialization (referenced in `EvolutionGame.py`).  
 
-### Supplementary
+### Others
 
 - `README.md`: This documentation.  
 
@@ -58,7 +58,19 @@ The code applies to the simulations in **Fig 2** and **Fig 5** of the main text.
    python main.py
    ```
 
-   The script automatically executes evolutionary games on generated snapshots. Results are saved to the `result` directory as `.txt` files containing cooperation frequencies.  
+   The script automatically executes evolutionary games on generated snapshots. Results are saved to the `result` directory as `.txt` files containing cooperation frequencies. Each `.txt` file contains **two columns of numerical data** representing:
+
+   1. **Temptation parameter `b`**: Values from `blist` in `config.py` (e.g., `1.0, 1.1, ..., 2.5`).
+   2. **Cooperation frequency `fc`**: Average fraction of cooperators across `EG_Rounds` (default 100).
+
+   **Example**:
+
+   ```
+   1.0 0.9832  
+   1.1 0.9547  
+   ...  
+   2.5 0.0121  
+   ```
 
 ## License  
 MIT License. 
