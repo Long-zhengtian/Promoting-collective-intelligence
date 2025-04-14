@@ -32,7 +32,7 @@ def random_pick_one(p):
 
 
 @njit
-def random_pick_many(size, p):  # 根据权重p，抽取size个元素，返回下标
+def random_pick_many(size, p):  
     picklist = []
     prob = p.copy()
     for i in range(size):
@@ -43,19 +43,19 @@ def random_pick_many(size, p):  # 根据权重p，抽取size个元素，返回�
 
 
 @njit
-def barabasi_albert_graph(N, m, m0):  # BA模型无标度网络
+def barabasi_albert_graph(N, m, m0):
     if m0 is None:
         m0 = m
     BAmat = np.zeros((N, N), dtype=np.int64)
     m0list = np.zeros(1, dtype=np.int64)
     degrees = np.zeros(N, dtype=np.int64)
-    for i in range(1, m0):  # 前m0个节点随机连接m0-1条边
+    for i in range(1, m0):
         friend = np.random.choice(m0list)
         BAmat[i, friend] = BAmat[friend, i] = 1
         m0list = np.append(m0list, i)
     for i in range(m0):
         degrees[i] = np.count_nonzero(BAmat[i])
-    for i in range(m0, N):  # 后来添加的节点需要满足生长和优先依附原则
+    for i in range(m0, N):
         choice_node = random_pick_many(m, degrees[:i])
         for j in choice_node:
             BAmat[i, j] = BAmat[j, i] = 1
@@ -64,14 +64,12 @@ def barabasi_albert_graph(N, m, m0):  # BA模型无标度网络
     return BAmat
 
 
-# 可以生成连通图
 def static_model_scale_free_graph(N, m, gamma):
     SMSFmat = np.zeros((N, N), dtype=np.int64)
     p = np.zeros(N)  # 权重
     sumP = 0.
     for i in range(N):
-        # 静态模型的参数 a in [0,1) gamma=(1+a)/a, a=1/(gamma-1)
-        p[i] = pow(i+1, -(1/(gamma-1)))  # 第1个节点的编号是0
+        p[i] = pow(i+1, -(1/(gamma-1)))
         sumP += p[i]
     p /= sumP
     edgeNum = 0
@@ -84,15 +82,7 @@ def static_model_scale_free_graph(N, m, gamma):
 
     return SMSFmat
 
-def connect_static_model_scale_free_graph(N, m, gamma):  # m越大，a越小，越有利于形成单个连通分量
-    """
-    静态模型生成的连通的无标度网络
-    :param N: 网络大小
-    :param m: 平均度为2m
-    :param gamma: 幂律指数
-    :return: networkx中的graph
-    静态模型的平均度为2m
-    """
+def connect_static_model_scale_free_graph(N, m, gamma):
     CSMSF_NOCs = nx.empty_graph()
     IsConnect = False
     while not IsConnect:
@@ -103,33 +93,8 @@ def connect_static_model_scale_free_graph(N, m, gamma):  # m越大，a越小，�
         #     print(i)
     return CSMSF_NOCs
 
-
-def qtt_static_model_scale_free_graph(N, k_av, a):  # 连通图static model模型，qtt改造版
-    pp = np.zeros((1, N), dtype=np.int64)
-    A = np.zeros(N, dtype=np.int64)
-    number_of_edges = k_av/2*N
-    for i in range(N):
-        pp[i] = i ^ (-a)
-    pp = pp/sum(pp)
-    p = pp
-    for i in range(2, N):
-        p[i] = sum(pp[1:i-1]) + p[i]
-    edges = 0
-    # while edges < number_of_edges:
-    #     t1 = rand();
-    #     node1 = find(p > t1, 1);
-    #
-    #     t2 = rand();
-    #     node2 = find(p > t2, 1);
-    #
-    #     if A[node1, node2] == 0 and node1 != node2:
-    #         edges = edges + 1
-    #         A[node1, node2] = 1
-    #         A[node2, node1] = 1
-    return A
-
 @njit
-def erdos_renyi_graph(N, p):  # ER随机图，N个节点
+def erdos_renyi_graph(N, p):
     ERmat = np.zeros((N, N), dtype=np.int64)
     for i in range(N):
         for j in range(i):
@@ -138,31 +103,8 @@ def erdos_renyi_graph(N, p):  # ER随机图，N个节点
     return ERmat
 
 
-def HK_SF_graph(N, m, m0, p):  # HK模型，可以调整网络聚集系数
-    """
-
-    :param N:
-    :param m:
-    :param m0:
-    :param p:
-    :return: 一个nx类型网络
-    """
-
-    G = nx.gnp_random_graph(m0, 0.05)
-    print(nx.is_connected(G))
-    # G = nx.Graph()
-    # G.add_nodes_from(range(m0))  # 初始的m0个节点
-    # for i in G.nodes():  # 初始连接m0-1条边，保证图连通
-    #     j = i
-    #     while j == i or G.degree[j] != 0:
-    #         j = np.random.choice(a=range(m0), size=1)
-    #     G.add_edge(i, j)
-
-    return G
-
-
 if __name__ == '__main__':
-    CSMSF_NOC = connect_static_model_scale_free_graph(test_n, test_m, test_gamma)  # m越大，a越小，越有利于形成单个连通分量
+    CSMSF_NOC = connect_static_model_scale_free_graph(test_n, test_m, test_gamma)
     #
     tempMat = [to_full_numpy_matrix(CSMSF_NOC)]
     np.save("./snapshot_CSMSF/CSMSF_" + str(test_n) + "N_" + str(test_m) + "m_" + str(test_gamma) + "gamma" + ".npy", np.array(tempMat))
