@@ -18,51 +18,30 @@ def to_full_numpy_matrix(_NOCs):
 
 
 def Largest_CC(G):
-    largest_cc = max(nx.connected_components(G), key=len)  # 获取最大连通子图
+    largest_cc = max(nx.connected_components(G), key=len)  # Get the largest connected component
     return G.subgraph(list(largest_cc))
 
 
 def draw_graph(NOC1, NOC2, _nocName, _f):
     """
-    双图展示绘制功能
+    Dual graph visualization function
     """
     if flag_draw == 1:
         fig, axs = plt.subplots(1, 2, figsize=(16, 8))
-        # 在第一个子图中展示第一个网络
         nx.draw(NOC1, ax=axs[0], pos=nx.kamada_kawai_layout(NOC1))
         axs[0].set_title('Static Network')
 
-        # 在第二个子图中展示第二个网络
         nx.draw(NOC2, ax=axs[1], pos=nx.kamada_kawai_layout(NOC1))
         axs[1].set_title(_nocName+" "+str(_f))
 
         plt.show()
     elif flag_draw == 2:
         nx.write_gexf(nx.from_numpy_array(to_full_numpy_matrix(NOC2)), "./draw_gexf/"+_nocName+'_'+str(_f)+".gexf")
-        # nx.write_gpickle(nx.from_numpy_array(to_full_numpy_matrix(NOC2)),"./draw_gpickle/" + _nocName + '_' + str(_f) + ".gpickle")
     else:
         pass
 
 
 def print_graph_properties(graphtype, frac, GName, G):
-    """
-    输出给定图G的属性
-    顶点数(Number of vertices)：图中节点的数量
-    边数(Number of edges)：图中连接两个节点的边的数量
-    度(Degree)：一个节点的度是指与该节点相连的边的数量
-    联通性(Connectivity)：图是否连通，即图中任意两点是否存在一条路径连接它们
-    密度(Density)：图中边的数量与最大可能边数的比值
-    直径(Diameter)：图中最长路径的长度
-    平均距离(Average distance)：图中所有节点对间的平均距离
-    中心性(Centrality)：节点在图中的重要程度，常用的中心性度量包括度中心性、接近中心性和介数中心性
-    团(Clique)：图中一个完全子图
-    模块度(Modularity)：图中社团结构的程度
-    """
-    # print(G.edges())
-    # for i in range(N):
-    #     print(G.degree[i])
-
-    # 输出图的属性
     if flag_complex:
         print()
         print("|------------------------------------------------------------------|")
@@ -111,7 +90,7 @@ def delete01degree(G):
 
 def link_neighbour(graphtype, node, ActivateEdgesNum, subgraphMaxEdgesNum, subgraphEdges):
     neighbors = np.random.choice(list(NOCs[graphtype].neighbors(node)), replace=False,
-                                 size=NOCs[graphtype].degree(node))  # 在搜索邻居的时候需要随机打乱邻居
+                                 size=NOCs[graphtype].degree(node))
     for id1 in range(NOCs[graphtype].degree(node)):
         if ActivateEdgesNum >= subgraphMaxEdgesNum:
             break
@@ -127,7 +106,7 @@ def link_neighbour(graphtype, node, ActivateEdgesNum, subgraphMaxEdgesNum, subgr
     return ActivateEdgesNum
 
 
-# -----------创建不同的时序网络-------------#
+# -----------Create different temporal networks-------------#
 def random_reference(graphtype, subgraphMaxEdgesNum):
     edges = list(NOCs[graphtype].edges())
     subgraphIndices = np.random.choice(len(edges), size=ceil(subgraphMaxEdgesNum), replace=False)
@@ -136,33 +115,32 @@ def random_reference(graphtype, subgraphMaxEdgesNum):
 
 
 def multi_structure(graphtype, subgraphMaxEdgesNum, cluster):
-    ActivateEdgesNum = 0  # 激活边的数量
-    subgraphEdges = []  # 子图的边
-    # while ActivateEdgesNum < subgraphMaxEdgesNum:  # 这个while没用
+    ActivateEdgesNum = 0  # Number of activated edges
+    subgraphEdges = []  # Edges of the subgraph
     nodes = np.random.choice(list(NOCs[graphtype].nodes()), size=NOCs[graphtype].number_of_nodes(), replace=False)
-    for node in nodes:  # nodes相当于进行了多次不放回抽样
+    for node in nodes:  # `nodes` is effectively a shuffled list of nodes (no replacement)
         if ActivateEdgesNum >= subgraphMaxEdgesNum:
             break
-        neighbors = np.random.choice(list(NOCs[graphtype].neighbors(node)), replace=False, size=NOCs[graphtype].degree(node))  # 在搜索邻居的时候需要随机打乱邻居
-        for id in range(NOCs[graphtype].degree(node)):  # 自身的邻居
+        neighbors = np.random.choice(list(NOCs[graphtype].neighbors(node)), replace=False, size=NOCs[graphtype].degree(node))
+        for id in range(NOCs[graphtype].degree(node)):
             if ActivateEdgesNum >= subgraphMaxEdgesNum:
                 break
             if (node, neighbors[id]) not in subgraphEdges and (neighbors[id], node) not in subgraphEdges:
                 subgraphEdges.append((node, neighbors[id]))
                 ActivateEdgesNum += 1
-        if cluster:  # 如果要构成cluster，则将邻居之间的点也都连接上
+        if cluster:  # If clustering is required, connect all neighbors of the node
             ActivateEdgesNum = link_neighbour(graphtype, node, ActivateEdgesNum, subgraphMaxEdgesNum, subgraphEdges)
     return subgraphEdges
 
 
 def single_structure(graphtype, subgraphMaxEdgesNum, cluster):
-    ActivateEdgesNum = 0  # 激活边的数量
-    subgraphEdges = []  # 子图的边
-    nodeQueue = Queue()  # 用于当前选择的node队列
-    # 随机抽一个node，从这个node开始向四周扩散，如果不够，则重新随机抽取node
+    ActivateEdgesNum = 0  # Number of activated edges
+    subgraphEdges = []  # Edges of the subgraph
+    nodeQueue = Queue()  # Queue for currently selected node
+    # Randomly select a node and expand from it; if not enough, reselect
     nodes = np.random.choice(list(NOCs[graphtype].nodes()), size=NOCs[graphtype].number_of_nodes(), replace=False)
     for rootNode in nodes:
-        isActivate = np.zeros(N)  # 记录已经激活的节点，保证严格non-cluster模式
+        isActivate = np.zeros(N)  # Record activated nodes to ensure strict non-cluster mode
         nodeQueue.push_back(rootNode)
         isActivate[rootNode] = 1
         while ActivateEdgesNum < subgraphMaxEdgesNum:
@@ -170,9 +148,9 @@ def single_structure(graphtype, subgraphMaxEdgesNum, cluster):
                 break
             node = nodeQueue.front()
             nodeQueue.pop()
-            neighbors = np.random.choice(list(NOCs[graphtype].neighbors(node)), replace=False, size=NOCs[graphtype].degree(node))  # 在搜索邻居的时候需要随机打乱邻居
-            for id in range(NOCs[graphtype].degree(node)):  # 自身的邻居
-                if (not cluster) and (isActivate[neighbors[id]]):  # non-cluster模式下，激活过的节点不要了
+            neighbors = np.random.choice(list(NOCs[graphtype].neighbors(node)), replace=False, size=NOCs[graphtype].degree(node))  # Randomly shuffle neighbors
+            for id in range(NOCs[graphtype].degree(node)):
+                if (not cluster) and (isActivate[neighbors[id]]):  # In non-cluster mode, skip already activated nodes
                     continue
                 if ActivateEdgesNum >= subgraphMaxEdgesNum:
                     break
@@ -181,21 +159,21 @@ def single_structure(graphtype, subgraphMaxEdgesNum, cluster):
                     nodeQueue.push_back(neighbors[id])
                     isActivate[neighbors[id]] = 1
                     ActivateEdgesNum += 1
-            if cluster:  # 如果要构成cluster，则将邻居之间的点也都连接上
+            if cluster:  # If clustering is required, connect all neighbors of the node
                 ActivateEdgesNum = link_neighbour(graphtype, node, ActivateEdgesNum, subgraphMaxEdgesNum, subgraphEdges)
     return subgraphEdges
 
 
 def delete_diff_edge(graphtype, deleteType, maxDelete=1000):
-    DeleteEdgesNum = 0  # 删除边的数量
+    DeleteEdgesNum = 0  # Number of edges deleted
     G = NOCs[graphtype].copy()
     hub = 0
     for node in G.nodes():
         hub = max(hub, G.degree(node))
     tau = 1.3
     phi = 7
-    non_continue = True  # 是否循环删边
-    if non_continue:  # 不循环删边
+    non_continue = True  # Whether to delete edges without loop (single pass)
+    if non_continue:  # Ensure network remains connected
         edges = list(G.edges())
         random.shuffle(edges)
         delete_edge = []
@@ -221,7 +199,7 @@ def delete_diff_edge(graphtype, deleteType, maxDelete=1000):
                 break
             G.remove_edge(edge[0], edge[1])
             DeleteEdgesNum += 1
-            if not nx.is_connected(G):  # 保证网络连通性
+            if not nx.is_connected(G):
                 G.add_edge(edge[0], edge[1])
                 DeleteEdgesNum -= 1
 
@@ -248,11 +226,11 @@ def delete_diff_edge(graphtype, deleteType, maxDelete=1000):
                         flag += 1
                         G.remove_edge(edge[0], edge[1])
                         DeleteEdgesNum += 1
-                        if not nx.is_connected(G):  # 保证网络连通性
+                        if not nx.is_connected(G):
                             flag -= 1
                             G.add_edge(edge[0], edge[1])
                             DeleteEdgesNum -= 1
-            if flag == 0:  # 没有删除的边
+            if flag == 0:
                 break
     return G.edges()
 
@@ -296,7 +274,7 @@ def create_structural_temporal_network(graphtype, f, snapshotName):
         print_graph_properties(graphtype, f, snapshotName, Wt)
         graphList.append(to_full_numpy_matrix(Wt))
 
-        if snapshotName.startswith('Delete'):  # 不具有随机性的网络只需要生成一次
+        if snapshotName.startswith('Delete'):  # Networks that do not have randomness need to be generated only once
             break
 
     if flag_save:

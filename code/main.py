@@ -4,22 +4,20 @@ import networkx as nx
 from config import *
 from EvolutionGame import EvolutionGameProcess
 
+# Set random seeds (uncomment if needed)
 # random.seed(seed_value)
 # np.random.seed(seed_value)
 # os.environ['PYTHONHASHSEED'] = str(seed_value)
 
 if __name__ == '__main__':
-    # static network
+    # Static network
     for net in graphType:
         EvolutionGameProcess(net, 'Static', G1+G2, 0)
 
-    # 子网络
+    # Subnetworks (used for temporal network evolution)
     for net in graphType:
-        for s in subNet:
-            for g in glist:  # 每个snapshot的演化次数
-                for f in flist:  # 节点的比例
-                    for model in ['Original']:
+        for s in subNet:  # Subnetwork types
+            for g in glist:  # Number of evolution rounds per snapshot
+                for f in flist:  # Proportion of participating nodes
+                    for model in ['Original']:  # Model type
                         EvolutionGameProcess(net, s, g, f, m, model)
-
-
-

@@ -2,13 +2,13 @@ import random
 from config import *
 
 
-class Player:  # 博弈双方对象
+class Player:  # Object representing a game participant
     def __init__(self, index, strategy, AccPayOffs=0):
-        self.index = index  # 序号
-        self.strategy = strategy  # 选择的博弈策略，True表示合作，False表示对抗
-        self.newStrategy = strategy  # 策略更新
-        self.AccPayOffs = AccPayOffs  # 累计报酬
-        self.IsActivate = False  # 这个点是否被激活过了
+        self.index = index  # Player's index
+        self.strategy = strategy  # Chosen strategy: True for cooperation, False for defection
+        self.newStrategy = strategy  # Updated strategy (after evolution)
+        self.AccPayOffs = AccPayOffs  # Accumulated payoff
+        self.IsActivate = False  # Whether the player has been activated
 
     def __str__(self):
         return "Index: {}; Strategy: {}; AccPayOffs: {}".format(self.index, self.strategy, self.AccPayOffs)
@@ -20,7 +20,7 @@ def playersInit():
     indices = list(range(N))
     random.shuffle(indices)
     for i in range(half_N):
-        players.append(Player(indices[i], True, 0))  # 合作玩家
+        players.append(Player(indices[i], True, 0))  # Cooperative players
     for i in range(half_N, N):
-        players.append(Player(indices[i], False, 0))  # 背叛玩家
+        players.append(Player(indices[i], False, 0))  # Defective players
     return players
